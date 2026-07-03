@@ -3,21 +3,32 @@
     "name": "GenAI Quotes",
     "slug": "genai-quotes",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#1a1a2e"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1a1a2e"
-      }
+      },
+      "package": "com.ashwinkact.genaiquotes"
     },
-    "plugins": ["expo-notifications"]
+    "plugins": [
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "06c1e5f3-f277-4de3-ae2d-010ddf5d9a6f"
+      }
+    }
   }
 }

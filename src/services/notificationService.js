@@ -1,18 +1,15 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
+import { registerPushTokenAPI } from './api';
 
-// Configure how notifications appear when the app is in the foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
   }),
 });
 
-/**
- * Request notification permissions and set up the notification channel
- */
 export async function setupNotifications() {
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -24,33 +21,52 @@ export async function setupNotifications() {
 
   if (finalStatus !== 'granted') {
     console.log('Notification permissions not granted');
-    return false;
+    return null;
   }
 
-  // Set up Android notification channel
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('quotes', {
-      name: 'GenAI Quotes',
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'Default',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#6c63ff',
     });
   }
 
-  return true;
+  try {
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId: '06c1e5f3-f277-4de3-ae2d-010ddf5d9a6f',
+    });
+    return tokenData.data;
+  } catch (error) {
+    console.log('Failed to get push token:', error);
+    return null;
+  }
 }
 
-/**
- * Send a local push notification with the quote content
- */
-export async function sendQuoteNotification(quote) {
+export async function registerPushToken() {
+  try {
+    const token = await setupNotifications();
+    if (token) {
+      const result = await registerPushTokenAPI(token);
+      console.log('Push token registered:', token);
+      return token;
+    }
+    console.log('No push token available');
+    return null;
+  } catch (error) {
+    console.log('Error registering push token:', error);
+    return null;
+  }
+}
+
+export async function sendLocalNotification(title, body) {
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '💡 GenAI Quote',
-      body: quote,
-      data: { type: 'quote' },
+      title,
+      body,
       sound: true,
     },
-    trigger: null, // Send immediately
+    trigger: null,
   });
 }

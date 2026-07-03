@@ -1,75 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { fetchAllQuotesAPI, sendQuoteAPI } from '../services/api';
-import { sendQuoteNotification } from '../services/notificationService';
+import { logoutAPI } from '../services/api';
 
-export default function HomeScreen({ onLogout }) {
-  const [quotes, setQuotes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [sendingId, setSendingId] = useState(null);
-
-  useEffect(() => {
-    loadQuotes();
-  }, []);
-
-  const loadQuotes = async () => {
-    setLoading(true);
+export default function HomeScreen({ navigation, onLogout, username, notifications }) {
+  const handleLogout = async () => {
     try {
-      const response = await fetchAllQuotesAPI();
-      if (response.success) {
-        setQuotes(response.data);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to load quotes');
-    } finally {
-      setLoading(false);
-    }
+      await logoutAPI();
+    } catch (e) {}
+    onLogout();
   };
-
-  const handleSendQuote = async (quote) => {
-    setSendingId(quote.id);
-    try {
-      // Call the API to "send" the quote
-      const response = await sendQuoteAPI(quote.id);
-
-      if (response.success) {
-        // Trigger a local push notification
-        await sendQuoteNotification(`"${quote.text}" — ${quote.author}`);
-        Alert.alert('Sent!', 'Quote sent as push notification');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send quote');
-    } finally {
-      setSendingId(null);
-    }
-  };
-
-  const renderQuote = ({ item }) => (
-    <View style={styles.quoteCard}>
-      <Text style={styles.quoteText}>"{item.text}"</Text>
-      <Text style={styles.authorText}>— {item.author}</Text>
-      <TouchableOpacity
-        style={[styles.sendButton, sendingId === item.id && styles.sendingButton]}
-        onPress={() => handleSendQuote(item)}
-        disabled={sendingId === item.id}
-      >
-        {sendingId === item.id ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={styles.sendButtonText}>📤 Send as Notification</Text>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -78,27 +24,46 @@ export default function HomeScreen({ onLogout }) {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>GenAI Quotes</Text>
-          <Text style={styles.headerSubtitle}>Tap to send as push notification</Text>
+          <Text style={styles.headerSubtitle}>Welcome, {username}</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.adminButton}
+            onPress={() => navigation.navigate('AdminLogin')}
+          >
+            <Text style={styles.adminButtonText}>🔐 Admin</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6c63ff" />
-          <Text style={styles.loadingText}>Loading quotes...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={quotes}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderQuote}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      <View style={styles.content}>
+        <Text style={styles.sectionTitle}>🔔 Notifications</Text>
+        {notifications.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No notifications yet</Text>
+            <Text style={styles.emptySubtext}>
+              Quotes sent by admin will appear here
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.notifCard}>
+                <Text style={styles.notifTitle}>{item.title}</Text>
+                <Text style={styles.notifBody}>{item.body}</Text>
+                <Text style={styles.notifTime}>{item.time}</Text>
+              </View>
+            )}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
     </View>
   );
 }
@@ -120,7 +85,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#6c63ff',
   },
@@ -129,63 +94,82 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  adminButton: {
+    backgroundColor: '#2a2a4a',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  adminButtonText: {
+    color: '#6c63ff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   logoutButton: {
     backgroundColor: '#e74c3c',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
   logoutText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
-  loadingContainer: {
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 16,
+  },
+  emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
+  emptyText: {
     color: '#888',
-    marginTop: 12,
-    fontSize: 14,
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    color: '#555',
+    fontSize: 13,
   },
   listContent: {
-    padding: 16,
     paddingBottom: 30,
   },
-  quoteCard: {
+  notifCard: {
     backgroundColor: '#16213e',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#2a2a4a',
   },
-  quoteText: {
-    color: '#e0e0e0',
-    fontSize: 15,
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  authorText: {
+  notifTitle: {
     color: '#6c63ff',
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 16,
+    marginBottom: 4,
   },
-  sendButton: {
-    backgroundColor: '#6c63ff',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  sendingButton: {
-    backgroundColor: '#4a44b5',
-  },
-  sendButtonText: {
-    color: '#fff',
+  notifBody: {
+    color: '#e0e0e0',
     fontSize: 14,
-    fontWeight: '600',
+    lineHeight: 20,
+  },
+  notifTime: {
+    color: '#555',
+    fontSize: 11,
+    marginTop: 8,
+    textAlign: 'right',
   },
 });

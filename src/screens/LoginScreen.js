@@ -10,27 +10,30 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { loginAPI } from '../services/api';
+import { loginAPI, registerAPI } from '../services/api';
 
 export default function LoginScreen({ onLogin }) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter email and password');
+  const handleSubmit = async () => {
+    if (!username.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter username and password');
       return;
     }
 
     setLoading(true);
     try {
-      const response = await loginAPI(email, password);
-      if (response.success) {
-        onLogin();
+      if (isRegister) {
+        await registerAPI(username, password);
+        Alert.alert('Success', 'Account created! Logging in...');
       }
+      const response = await loginAPI(username, password);
+      onLogin({ username, token: response.token });
     } catch (error) {
-      Alert.alert('Login Failed', error.message);
+      Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
     }
@@ -48,11 +51,10 @@ export default function LoginScreen({ onLogin }) {
         <View style={styles.form}>
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder="Username"
             placeholderTextColor="#888"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
+            value={username}
+            onChangeText={setUsername}
             autoCapitalize="none"
           />
           <TextInput
@@ -66,19 +68,25 @@ export default function LoginScreen({ onLogin }) {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={handleLogin}
+            onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Login</Text>
+              <Text style={styles.buttonText}>
+                {isRegister ? 'Register & Login' : 'Login'}
+              </Text>
             )}
           </TouchableOpacity>
 
-          <Text style={styles.hint}>
-            Use any email/password to login (dummy auth)
-          </Text>
+          <TouchableOpacity onPress={() => setIsRegister(!isRegister)}>
+            <Text style={styles.switchText}>
+              {isRegister
+                ? 'Already have an account? Login'
+                : "Don't have an account? Register"}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -133,10 +141,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  hint: {
-    color: '#666',
+  switchText: {
+    color: '#6c63ff',
     textAlign: 'center',
     marginTop: 20,
-    fontSize: 13,
+    fontSize: 14,
   },
 });
