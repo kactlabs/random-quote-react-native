@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#1a1a2e"
       },
-      "package": "com.ashwinkact.genaiquotes"
+      "package": "com.ashwinkact.genaiquotes",
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-notifications"

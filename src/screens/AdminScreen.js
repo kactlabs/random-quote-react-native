@@ -10,8 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { sendNotificationAPI } from '../services/api';
-import { sendLocalNotification } from '../services/notificationService';
+import { sendNotificationAPI, broadcastNotificationAPI } from '../services/api';
 
 const QUOTES_URL = 'https://fastapi-for-quote-dummy.vercel.app/quotes';
 
@@ -48,20 +47,11 @@ export default function AdminScreen({ navigation, username }) {
 
     setSendingRandom(true);
     try {
-      if (targetUser.trim()) {
-        const result = await sendNotificationAPI(notifTitle, notifBody, targetUser);
-        Alert.alert(
-          'Quote Sent!',
-          `"${randomQuote.text}" — ${randomQuote.author}\n\nSent: ${result.sent}, Failed: ${result.failed}`
-        );
-      } else {
-        const result = await sendNotificationAPI(notifTitle, notifBody, null);
-        Alert.alert(
-          'Quote Sent!',
-          `"${randomQuote.text}" — ${randomQuote.author}\n\nSent: ${result.sent}, Failed: ${result.failed}`
-        );
-      }
-      await sendLocalNotification(notifTitle, notifBody);
+      const result = await broadcastNotificationAPI(notifTitle, notifBody);
+      Alert.alert(
+        'Quote Sent!',
+        `"${randomQuote.text}" — ${randomQuote.author}\n\nSent: ${result.sent}, Failed: ${result.failed}`
+      );
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -78,7 +68,6 @@ export default function AdminScreen({ navigation, username }) {
     try {
       const result = await sendNotificationAPI(title, body, targetUser);
       Alert.alert('Success', `Notification sent! (${result.sent} delivered, ${result.failed} failed)`);
-      await sendLocalNotification(title, body);
       setTitle('');
       setBody('');
       setTargetUser('');
@@ -96,12 +85,11 @@ export default function AdminScreen({ navigation, username }) {
     }
     setLoading(true);
     try {
-      const result = await sendNotificationAPI(title, body, null);
+      const result = await broadcastNotificationAPI(title, body);
       Alert.alert(
         'Broadcast Sent',
         `Sent: ${result.sent}, Failed: ${result.failed}`
       );
-      await sendLocalNotification(title, body);
       setTitle('');
       setBody('');
     } catch (error) {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1000498432944",
+    "project_id": "random-quote-52a7d",
+    "storage_bucket": "random-quote-52a7d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1000498432944:android:a0287cd46484a1968fe475",
+        "android_client_info": {
+          "package_name": "com.ashwinkact.genaiquotes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiGJ0Z-O8zBiIawshM4rRfqMar7u0Y7RU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

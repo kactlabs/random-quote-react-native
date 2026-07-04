@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { Platform, Alert } from 'react-native';
+import { Platform } from 'react-native';
 import { registerPushTokenAPI } from './api';
 
 Notifications.setNotificationHandler({
@@ -20,7 +20,6 @@ export async function setupNotifications() {
   }
 
   if (finalStatus !== 'granted') {
-    console.log('Notification permissions not granted');
     return null;
   }
 
@@ -39,7 +38,7 @@ export async function setupNotifications() {
     });
     return tokenData.data;
   } catch (error) {
-    console.log('Failed to get push token:', error);
+    console.log('Failed to get Expo push token:', error);
     return null;
   }
 }
@@ -52,7 +51,6 @@ export async function registerPushToken() {
       console.log('Push token registered:', token);
       return token;
     }
-    console.log('No push token available');
     return null;
   } catch (error) {
     console.log('Error registering push token:', error);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Notifications from 'expo-notifications';
@@ -28,7 +29,12 @@ export default function App() {
 
   const handleLogin = async (userData) => {
     setUser(userData);
-    await registerPushToken();
+    const token = await registerPushToken();
+    if (token) {
+      Alert.alert('Push Enabled', 'Push token registered: ' + token.substring(0, 30) + '...');
+    } else {
+      Alert.alert('Push Failed', 'Could not register push token. Notifications will not work.');
+    }
   };
 
   const handleLogout = () => {
